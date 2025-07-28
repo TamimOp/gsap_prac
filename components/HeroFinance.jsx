@@ -7,31 +7,39 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HeroSection() {
+  // Refs for section, heading, and all cards
   const sectionRef = useRef(null);
   const headingRef = useRef(null);
   const cardsRef = useRef([]);
 
+  // Assign card refs
+  const setCardRef = (el, idx) => (cardsRef.current[idx] = el);
+
   useEffect(() => {
+    // Animation context for GSAP
     const ctx = gsap.context(() => {
-      // Get section center for cards to move to
       const section = sectionRef.current;
+
+      // Find center of section
       const centerX = section.offsetWidth / 2;
       const centerY = section.offsetHeight / 2;
 
-      // Get card positions and calculate deltas to center
+      // For each card, calculate how far it needs to move to reach the center
       const cardDeltas = cardsRef.current.map((card) => {
         if (!card) return { x: 0, y: 0 };
-        const rect = card.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
         const sectionRect = section.getBoundingClientRect();
-        const cardCenterX = rect.left - sectionRect.left + rect.width / 2;
-        const cardCenterY = rect.top - sectionRect.top + rect.height / 2;
+        const cardCenterX =
+          cardRect.left - sectionRect.left + cardRect.width / 2;
+        const cardCenterY =
+          cardRect.top - sectionRect.top + cardRect.height / 2;
         return {
           x: centerX - cardCenterX,
           y: centerY - cardCenterY,
         };
       });
 
-      // Timeline
+      // Main timeline for scroll animation
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -42,7 +50,7 @@ export default function HeroSection() {
         },
       });
 
-      // 1. Heading: starts huge, shrinks and fades
+      // 1. Animate heading: shrink and fade
       tl.fromTo(
         headingRef.current,
         { scale: 1.6, opacity: 1 },
@@ -50,7 +58,7 @@ export default function HeroSection() {
         0
       );
 
-      // 2. Cards: fade/slide in
+      // 2. Animate cards: fade/slide in
       tl.to(
         cardsRef.current,
         {
@@ -64,7 +72,7 @@ export default function HeroSection() {
         0.2
       );
 
-      // 3. Cards: move to center and scale up, above heading
+      // 3. Move cards to center, above heading
       cardsRef.current.forEach((card, i) => {
         tl.to(
           card,
@@ -82,11 +90,9 @@ export default function HeroSection() {
       });
     }, sectionRef);
 
+    // Cleanup on unmount
     return () => ctx.revert();
   }, []);
-
-  // Helper to assign refs to cards
-  const setCardRef = (el, idx) => (cardsRef.current[idx] = el);
 
   return (
     <section
